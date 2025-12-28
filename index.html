@@ -67,7 +67,6 @@
     <!-- Enhanced Error Handler to debug white screens in Production -->
     <script>
       window.onerror = function(msg, url, line, col, error) {
-        // Ignore ResizeObserver loop errors
         if (msg.includes('ResizeObserver loop')) return false;
         
         console.error('Global Error:', { msg, url, line, col, error });
