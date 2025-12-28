@@ -1,4 +1,5 @@
-// Manually define ImportMeta to avoid errors if vite/client types are missing in the environment
+/// <reference types="vite/client" />
+
 interface ImportMetaEnv {
   readonly BASE_URL: string;
   readonly MODE: string;
@@ -15,18 +16,20 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// InPost Global Object Definition
-interface Window {
-  easyPack: {
-    modalMap: (config: { onPointSelect: (point: any) => void }, locale: string) => void;
-    mapWidget: any;
+declare global {
+  interface Window {
+    easyPack: {
+      modalMap: (config: { onPointSelect: (point: any) => void }, locale: string) => void;
+      mapWidget: any;
+    };
+    onInPostPointSelect?: (point: any) => void;
+  }
+
+  namespace JSX {
+    interface IntrinsicElements {
+      'inpost-geowidget': any;
+    }
   }
 }
 
-// Global JSX Shim
-declare namespace JSX {
-  interface IntrinsicElements {
-    'inpost-geowidget': any;
-    [elemName: string]: any;
-  }
-}
+export {};

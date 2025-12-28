@@ -3,13 +3,6 @@ import { Modal } from '@/components/ui/Modal';
 import { PickupPoint } from '@/types/api';
 import { Spinner } from '@/components/ui/Spinner';
 
-declare global {
-  interface Window {
-    // Typing the custom InPost event details
-    onInPostPointSelect?: (point: any) => void;
-  }
-}
-
 interface InPostPickerProps {
   open: boolean;
   onClose: () => void;

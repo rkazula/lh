@@ -58,37 +58,33 @@
   <body>
     <!-- Default content to verify if React mounts -->
     <div id="root">
-      <div style="padding: 20px; text-align: center; font-family: sans-serif; margin-top: 20vh;">
-        <h1>System Booting...</h1>
-        <p style="color: #888;">If this message persists, check console for errors.</p>
+      <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:sans-serif;color:#333;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
       </div>
     </div>
 
-    <!-- Enhanced Error Handler -->
+    <!-- Enhanced Error Handler to debug white screens in Production -->
     <script>
-      function showError(title, msg, details) {
+      window.onerror = function(msg, url, line, col, error) {
+        // Ignore ResizeObserver loop errors
+        if (msg.includes('ResizeObserver loop')) return false;
+        
+        console.error('Global Error:', { msg, url, line, col, error });
+        
         const el = document.getElementById('root');
         if (el) {
           el.innerHTML = `
             <div style="padding:20px;color:#ff5555;background:#1a0000;font-family:monospace;height:100vh;overflow:auto;text-align:left;">
-              <h2 style="border-bottom:1px solid #ff5555;padding-bottom:10px;">${title}</h2>
+              <h2 style="border-bottom:1px solid #ff5555;padding-bottom:10px;">System Error</h2>
               <p style="font-size:1.2em;font-weight:bold;">${msg}</p>
-              <pre style="background:#000;padding:10px;border-radius:5px;overflow-x:auto;white-space:pre-wrap;">${details || ''}</pre>
+              <pre style="background:#000;padding:10px;border-radius:5px;overflow-x:auto;white-space:pre-wrap;margin-top:10px;">${error ? error.stack : 'No stack trace available'}</pre>
+              <p style="margin-top:20px;color:#888;">Try refreshing the page.</p>
             </div>
           `;
         }
-      }
-
-      window.onerror = function(msg, url, line, col, error) {
-        // Ignorowanie błędów resize observera, które są niegroźne
-        if (msg.includes('ResizeObserver loop')) return false;
-        showError('JavaScript Error', msg, `File: ${url}\nLine: ${line}:${col}\nStack: ${error ? error.stack : 'N/A'}`);
         return false;
       };
-
-      window.addEventListener('unhandledrejection', function(event) {
-        showError('Unhandled Promise Rejection', event.reason, event.reason ? event.reason.stack : 'No stack trace');
-      });
     </script>
 
     <!-- Entry Point -->
