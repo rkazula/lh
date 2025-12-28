@@ -1,49 +1,93 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { formatCurrency } from '@/lib/utils';
-import { Product } from '@/types/api';
+import { ShoppingBag } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  originalPrice?: number;
+  images: string[];
+  badge?: string;
+  category: string;
+}
 
 interface ProductCardProps {
   product: Product;
-  index: number;
+  index?: number;
 }
 
-export function ProductCard({ product, index }: ProductCardProps) {
-  // Simple check for min price if variants exist
-  const basePrice = product.price_gross;
+export function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pl-PL', {
+      style: 'currency',
+      currency: 'PLN',
+    }).format(price);
+  };
+
+  const discount = product.originalPrice
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : null;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.4 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
     >
-      <Link to={`/product/${product.id}`} className="group block h-full">
-        <Card className="h-full border-transparent bg-secondary/10 hover:bg-secondary/20 transition-all duration-300 overflow-hidden group-hover:shadow-xl dark:shadow-none">
-          <div className="aspect-[4/5] bg-secondary/30 relative overflow-hidden flex items-center justify-center">
-             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-             <span className="text-muted-foreground font-mono text-xs opacity-50 group-hover:scale-110 transition-transform duration-500">
-               {product.slug.toUpperCase()}
-             </span>
-          </div>
-          
-          <CardHeader className="p-4">
-            <div className="flex justify-between items-start gap-2">
-              <CardTitle className="text-base font-medium leading-tight group-hover:text-primary transition-colors">
-                {product.name}
-              </CardTitle>
+      <Link
+        to={`/product/${product.slug}`}
+        className="group block"
+      >
+        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary mb-4">
+          {product.images[0] ? (
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ShoppingBag className="h-16 w-16 text-muted-foreground/50" />
             </div>
-          </CardHeader>
+          )}
           
-          <CardFooter className="p-4 pt-0 flex justify-between items-center">
-            <span className="font-semibold text-lg">{formatCurrency(basePrice / 100)}</span>
-            <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0">
-              Details
-            </Button>
-          </CardFooter>
-        </Card>
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {product.badge && (
+              <Badge className="bg-primary text-primary-foreground">
+                {product.badge}
+              </Badge>
+            )}
+            {discount && (
+              <Badge variant="destructive">
+                -{discount}%
+              </Badge>
+            )}
+          </div>
+
+          {/* Hover overlay */}
+          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors duration-300" />
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">
+            {product.category}
+          </p>
+          <h3 className="font-medium group-hover:text-primary transition-colors">
+            {product.name}
+          </h3>
+          <div className="flex items-baseline gap-2">
+            <span className="font-semibold">{formatPrice(product.price)}</span>
+            {product.originalPrice && (
+              <span className="text-sm text-muted-foreground line-through">
+                {formatPrice(product.originalPrice)}
+              </span>
+            )}
+          </div>
+        </div>
       </Link>
     </motion.div>
   );

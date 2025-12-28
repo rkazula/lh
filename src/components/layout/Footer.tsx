@@ -1,51 +1,102 @@
+import { Link } from 'react-router-dom';
 import { APP_NAME } from '@/lib/constants';
+import { Instagram, Twitter } from 'lucide-react';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer className="border-t border-border bg-secondary/30 backdrop-blur-sm mt-auto">
+    <footer className="border-t border-border/50 mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">{APP_NAME}</h3>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Premium apparel for those who appreciate the silence. Crafted with precision, worn with attitude.
+          {/* Brand */}
+          <div className="md:col-span-1">
+            <Link to="/" className="text-xl font-bold tracking-tighter">
+              {APP_NAME}
+            </Link>
+            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+              Minimalistyczny streetwear dla introwertyków. Wysokiej jakości materiały, zero hałasu.
             </p>
           </div>
-          
+
+          {/* Shop */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm">Shop</h4>
+            <h4 className="font-semibold mb-4 text-sm">Sklep</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/catalog" className="hover:text-foreground transition-colors">New Arrivals</a></li>
-              <li><a href="/catalog?cat=tees" className="hover:text-foreground transition-colors">Tees</a></li>
-              <li><a href="/catalog?cat=accessories" className="hover:text-foreground transition-colors">Accessories</a></li>
+              <li>
+                <Link to="/catalog" className="hover:text-foreground transition-colors">
+                  Wszystkie produkty
+                </Link>
+              </li>
+              <li>
+                <Link to="/collections" className="hover:text-foreground transition-colors">
+                  Kolekcje
+                </Link>
+              </li>
+              <li>
+                <Link to="/catalog?category=new" className="hover:text-foreground transition-colors">
+                  Nowości
+                </Link>
+              </li>
             </ul>
           </div>
 
+          {/* Company */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm">Company</h4>
+            <h4 className="font-semibold mb-4 text-sm">Firma</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/about" className="hover:text-foreground transition-colors">About Us</a></li>
-              <li><a href="/careers" className="hover:text-foreground transition-colors">Careers</a></li>
-              <li><a href="/terms" className="hover:text-foreground transition-colors">Terms & Conditions</a></li>
+              <li>
+                <Link to="/about" className="hover:text-foreground transition-colors">
+                  O nas
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-foreground transition-colors">
+                  Kontakt
+                </Link>
+              </li>
+              <li>
+                <Link to="/shipping" className="hover:text-foreground transition-colors">
+                  Dostawa i zwroty
+                </Link>
+              </li>
             </ul>
           </div>
 
+          {/* Social */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm">Stay Connected</h4>
-            <div className="flex gap-4">
-               {/* Social placeholders */}
-               <div className="w-8 h-8 rounded-full bg-foreground/10" />
-               <div className="w-8 h-8 rounded-full bg-foreground/10" />
-               <div className="w-8 h-8 rounded-full bg-foreground/10" />
+            <h4 className="font-semibold mb-4 text-sm">Obserwuj nas</h4>
+            <div className="flex gap-3">
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+              >
+                <Twitter className="h-5 w-5" />
+              </a>
             </div>
           </div>
         </div>
-        
-        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
-          <p>&copy; {currentYear} {APP_NAME}. All rights reserved.</p>
-          <p>Designed with 🖤 in the Void.</p>
+
+        <div className="mt-12 pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} {APP_NAME}. Wszystkie prawa zastrzeżone.
+          </p>
+          <div className="flex gap-6 text-sm text-muted-foreground">
+            <Link to="/privacy" className="hover:text-foreground transition-colors">
+              Polityka prywatności
+            </Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">
+              Regulamin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

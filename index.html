@@ -2,92 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Local Haters | Wear Your Silence</title>
-    <meta name="description" content="Minimalist streetwear for the introverted soul." />
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
+    <!-- TODO: Set the document title to the name of your application -->
+    <title>Lovable App</title>
+    <meta name="description" content="Lovable Generated Project" />
+    <meta name="author" content="Lovable" />
 
-    <!-- InPost Geowidget -->
-    <link rel="stylesheet" href="https://geowidget.inpost.pl/inpost-geowidget.css" />
-    <script src="https://geowidget.inpost.pl/inpost-geowidget.js" defer></script>
-    
-    <style>
-      body, html { margin: 0; padding: 0; height: 100%; width: 100%; background-color: #0a0a0a; color: white; }
-      #root { height: 100%; width: 100%; display: flex; flex-direction: column; }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "vite": "https://esm.sh/vite@^7.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "path": "https://esm.sh/path@^0.12.7",
-    "tailwindcss": "https://esm.sh/tailwindcss@^4.1.18",
-    "clsx": "https://esm.sh/clsx@^2.1.1",
-    "tailwind-merge": "https://esm.sh/tailwind-merge@^3.4.0",
-    "zustand": "https://esm.sh/zustand@^5.0.9",
-    "zustand/": "https://esm.sh/zustand@^5.0.9/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
-    "framer-motion": "https://esm.sh/framer-motion@^12.23.26",
-    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.90.14",
-    "react-hook-form": "https://esm.sh/react-hook-form@^7.69.0",
-    "@hookform/resolvers/": "https://esm.sh/@hookform/resolvers@^5.2.2/",
-    "zod": "https://esm.sh/zod@^4.2.1",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react-helmet-async": "https://esm.sh/react-helmet-async@^2.0.5",
-    "@netlify/functions": "https://esm.sh/@netlify/functions@^5.1.2",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0",
-    "@ingameltd/node-przelewy24": "https://esm.sh/@ingameltd/node-przelewy24@^2.1.0",
-    "vitest": "https://esm.sh/vitest@^4.0.16",
-    "react-leaflet": "https://esm.sh/react-leaflet@^5.0.0",
-    "leaflet": "https://esm.sh/leaflet@^1.9.4",
-    "crypto": "https://esm.sh/crypto@^1.0.1",
-    "@playwright/test": "https://esm.sh/@playwright/test@^1.57.0"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
+    <!-- TODO: Update og:title to match your application name -->
+    <meta property="og:title" content="Lovable App" />
+    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Lovable" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  </head>
+
   <body>
-    <!-- Default content to verify if React mounts -->
-    <div id="root">
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:sans-serif;color:#333;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
-      </div>
-    </div>
-
-    <!-- Enhanced Error Handler to debug white screens in Production -->
-    <script>
-      window.onerror = function(msg, url, line, col, error) {
-        if (msg.includes('ResizeObserver loop')) return false;
-        
-        console.error('Global Error:', { msg, url, line, col, error });
-        
-        const el = document.getElementById('root');
-        if (el) {
-          el.innerHTML = `
-            <div style="padding:20px;color:#ff5555;background:#1a0000;font-family:monospace;height:100vh;overflow:auto;text-align:left;">
-              <h2 style="border-bottom:1px solid #ff5555;padding-bottom:10px;">System Error</h2>
-              <p style="font-size:1.2em;font-weight:bold;">${msg}</p>
-              <pre style="background:#000;padding:10px;border-radius:5px;overflow-x:auto;white-space:pre-wrap;margin-top:10px;">${error ? error.stack : 'No stack trace available'}</pre>
-              <p style="margin-top:20px;color:#888;">Try refreshing the page.</p>
-            </div>
-          `;
-        }
-        return false;
-      };
-    </script>
-
-    <!-- Entry Point -->
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-  <script type="module" src="/index.tsx"></script>
-</body>
+  </body>
 </html>

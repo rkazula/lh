@@ -1,65 +1,39 @@
-import { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import AdminLayout from '@/components/layout/AdminLayout'; // Direct import for layout usually fine
-import { Spinner } from '@/components/ui/Spinner';
-import { Toaster } from '@/components/ui/Toast';
-import { CartSheet } from '@/components/features/CartSheet';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Layout } from "./components/layout/Layout";
+import { ToastContainer } from "./components/ui/ToastContainer";
+import Home from "./pages/Home";
+import Catalog from "./pages/Catalog";
+import ProductPage from "./pages/ProductPage";
+import Collections from "./pages/Collections";
+import About from "./pages/About";
+import NotFound from "./pages/NotFound";
 
-// Lazy loading pages
-const Home = lazy(() => import('./pages/Home'));
-const Catalog = lazy(() => import('./pages/Catalog'));
-const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const Cart = lazy(() => import('./pages/Cart'));
-const Checkout = lazy(() => import('./pages/Checkout'));
-const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+const queryClient = new QueryClient();
 
-// Admin Pages
-const AdminLogin = lazy(() => import('./pages/admin/Login'));
-const Inventory = lazy(() => import('./pages/admin/Inventory'));
-const Discounts = lazy(() => import('./pages/admin/Discounts'));
-const Settings = lazy(() => import('./pages/admin/Settings'));
-
-function App() {
-  return (
-    <>
-      <Suspense 
-        fallback={
-          <div className="h-screen w-full flex items-center justify-center bg-background">
-            <Spinner size="lg" />
-          </div>
-        }
-      >
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="catalog" element={<Catalog />} />
-            <Route path="product/:id" element={<ProductDetail />} />
-            <Route path="cart" element={<Cart />} />
-            <Route path="checkout" element={<Checkout />} />
-            <Route path="success" element={<OrderSuccess />} />
-            <Route path="404" element={<NotFound />} />
-          </Route>
-
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          
-          <Route path="/admin" element={<AdminLayout />}>
-             <Route index element={<Navigate to="/admin/inventory" replace />} />
-             <Route path="inventory" element={<Inventory />} />
-             <Route path="discounts" element={<Discounts />} />
-             <Route path="settings" element={<Settings />} />
-          </Route>
-
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </Suspense>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
       <Toaster />
-      <CartSheet />
-    </>
-  );
-}
+      <Sonner />
+      <ToastContainer />
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/product/:slug" element={<ProductPage />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/about" element={<About />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

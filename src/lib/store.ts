@@ -1,53 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// --- Toast Store ---
-type ToastType = 'success' | 'error' | 'info';
-
-interface Toast {
-  id: string;
-  message: string;
-  type: ToastType;
-}
-
-interface ToastState {
-  toasts: Toast[];
-  addToast: (message: string, type?: ToastType) => void;
-  removeToast: (id: string) => void;
-}
-
-export const useToastStore = create<ToastState>((set) => ({
-  toasts: [],
-  addToast: (message, type = 'info') => {
-    const id = Math.random().toString(36).substring(2, 9);
-    set((state) => ({ toasts: [...state.toasts, { id, message, type }] }));
-    setTimeout(() => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })), 3000);
-  },
-  removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
-}));
-
-// --- Theme Store ---
-interface ThemeState {
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
-}
-
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      theme: 'system',
-      setTheme: (theme) => set({ theme }),
-    }),
-    { name: 'theme-storage' }
-  )
-);
-
 // --- Cart Store ---
 export interface CartItem {
   variantId: string;
   productId: string;
   name: string;
-  variantName: string; // e.g. "Size L / Black"
+  variantName: string;
   price: number;
   image?: string;
   quantity: number;
@@ -62,37 +21,72 @@ interface CartState {
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
+  getTotalItems: () => number;
+  getTotalPrice: () => number;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       items: [],
       isSheetOpen: false,
       openSheet: () => set({ isSheetOpen: true }),
       closeSheet: () => set({ isSheetOpen: false }),
-      addItem: (newItem) =>
+      addItem: (item) =>
         set((state) => {
-          const existing = state.items.find((i) => i.variantId === newItem.variantId);
+          const existing = state.items.find((i) => i.variantId === item.variantId);
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.variantId === newItem.variantId ? { ...i, quantity: i.quantity + 1 } : i
+                i.variantId === item.variantId
+                  ? { ...i, quantity: i.quantity + item.quantity }
+                  : i
               ),
-              isSheetOpen: true,
             };
           }
-          return { items: [...state.items, newItem], isSheetOpen: true };
+          return { items: [...state.items, item] };
         }),
       removeItem: (id) =>
         set((state) => ({ items: state.items.filter((i) => i.variantId !== id) })),
       updateQuantity: (id, qty) =>
         set((state) => {
-           if (qty < 1) return { items: state.items.filter((i) => i.variantId !== id) };
-           return { items: state.items.map((i) => i.variantId === id ? { ...i, quantity: qty } : i) };
+          if (qty < 1) return { items: state.items.filter((i) => i.variantId !== id) };
+          return {
+            items: state.items.map((i) =>
+              i.variantId === id ? { ...i, quantity: qty } : i
+            ),
+          };
         }),
       clearCart: () => set({ items: [] }),
+      getTotalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
+      getTotalPrice: () => get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
     }),
     { name: 'cart-storage' }
   )
 );
+
+// --- Toast Store ---
+export interface Toast {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
+interface ToastState {
+  toasts: Toast[];
+  addToast: (message: string, type?: Toast['type']) => void;
+  removeToast: (id: string) => void;
+}
+
+export const useToastStore = create<ToastState>((set) => ({
+  toasts: [],
+  addToast: (message, type = 'info') => {
+    const id = Math.random().toString(36).substr(2, 9);
+    set((state) => ({ toasts: [...state.toasts, { id, message, type }] }));
+    setTimeout(() => {
+      set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
+    }, 4000);
+  },
+  removeToast: (id) =>
+    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+}));

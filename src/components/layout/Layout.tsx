@@ -1,26 +1,30 @@
-import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import { PageTransition } from './PageTransition';
-import { AnimatePresence } from 'framer-motion';
+import { CartSheet } from '@/components/features/CartSheet';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ANIMATION_VARIANTS } from '@/lib/constants';
 
 export function Layout() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      {/* 
-        Padding top allows content to start below fixed header. 
-        Min-height ensures footer stays at bottom.
-      */}
-      <main className="flex-grow flex flex-col pt-20">
+      <CartSheet />
+      <main className="flex-grow pt-20">
         <AnimatePresence mode="wait">
-          {/* We use a key based on pathname to trigger animations on route change */}
-          <PageTransition key={location.pathname}>
+          <motion.div
+            key={location.pathname}
+            initial="pageInitial"
+            animate="pageAnimate"
+            exit="pageExit"
+            variants={ANIMATION_VARIANTS}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="w-full flex-grow flex flex-col"
+          >
             <Outlet />
-          </PageTransition>
+          </motion.div>
         </AnimatePresence>
       </main>
       <Footer />

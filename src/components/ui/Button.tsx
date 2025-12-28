@@ -1,46 +1,62 @@
-import React from 'react';
-import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'glass' | 'outline' | 'destructive';
-  size?: 'sm' | 'md' | 'lg' | 'icon';
-  isLoading?: boolean;
+import { cn } from "@/lib/utils";
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-lg",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+        glass: "glass hover:bg-background/90 text-foreground border-border/50",
+      },
+      size: {
+        default: "h-11 px-6 text-sm",
+        sm: "h-9 px-4 text-sm",
+        lg: "h-14 px-8 text-base",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading, children, disabled, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
     return (
-      <button
-        ref={ref}
-        disabled={isLoading || disabled}
-        className={cn(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
-          {
-            // Variants
-            'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg': variant === 'primary',
-            'bg-secondary text-secondary-foreground hover:bg-secondary/80': variant === 'secondary',
-            'hover:bg-accent hover:text-accent-foreground': variant === 'ghost',
-            'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground': variant === 'outline',
-            'bg-destructive text-destructive-foreground hover:bg-destructive/90': variant === 'destructive',
-            'glass hover:bg-white/80 dark:hover:bg-black/80 text-foreground': variant === 'glass',
-            
-            // Sizes
-            'h-9 px-3 text-xs': size === 'sm',
-            'h-11 px-6 text-sm': size === 'md',
-            'h-14 px-8 text-base': size === 'lg',
-            'h-10 w-10': size === 'icon',
-          },
-          className
-        )}
+      <Comp 
+        className={cn(buttonVariants({ variant, size, className }))} 
+        ref={ref} 
+        disabled={disabled || loading}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {children}
-      </button>
+        {loading ? (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          children
+        )}
+      </Comp>
     );
-  }
+  },
 );
+Button.displayName = "Button";
 
-Button.displayName = 'Button';
-export { Button };
+export { Button, buttonVariants };

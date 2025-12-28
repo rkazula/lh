@@ -3,9 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME, NAVIGATION_LINKS } from '@/lib/constants';
-import { Button } from '@/components/ui/Button';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/lib/store';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -24,24 +24,22 @@ export function Header() {
 
   useEffect(() => {
     setMobileMenuOpen(false);
-  }, [location]);
+  }, [location.pathname]);
 
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent',
-        (isScrolled || mobileMenuOpen) && 'glass border-white/10 dark:border-white/5 py-2',
-        !isScrolled && !mobileMenuOpen && 'py-4 bg-transparent'
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        isScrolled ? 'glass-strong py-3' : 'py-4 bg-transparent'
       )}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
-        <Link 
-          to="/" 
-          className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70"
-        >
+        {/* Logo */}
+        <Link to="/" className="text-xl font-bold tracking-tighter hover:opacity-80 transition-opacity">
           {APP_NAME}
         </Link>
 
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           {NAVIGATION_LINKS.map((link) => (
             <Link
@@ -49,7 +47,9 @@ export function Header() {
               to={link.href}
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                location.pathname === link.href ? 'text-foreground' : 'text-muted-foreground'
+                location.pathname === link.href
+                  ? 'text-primary'
+                  : 'text-muted-foreground'
               )}
             >
               {link.label}
@@ -57,52 +57,60 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
-          <ThemeToggle />
-          <Button variant="ghost" size="icon" className="relative" onClick={openSheet} aria-label="Cart">
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={openSheet}
+            className="relative"
+            aria-label="Koszyk"
+          >
             <ShoppingBag className="h-5 w-5" />
             {cartCount > 0 && (
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+                {cartCount}
+              </span>
             )}
           </Button>
-        </div>
 
-        <div className="md:hidden flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative mr-2" onClick={openSheet}>
-              <ShoppingBag className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
-              )}
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+          {/* Mobile Menu Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 glass border-t border-white/10 p-4 animate-accordion-down">
-          <nav className="flex flex-col gap-4">
-            {NAVIGATION_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="text-base font-medium text-foreground py-2 border-b border-border/50"
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="pt-4 flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Theme</span>
-                <ThemeToggle />
-            </div>
-          </nav>
-        </div>
-      )}
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden absolute top-full left-0 right-0 glass-strong border-t border-border/50 overflow-hidden"
+          >
+            <nav className="flex flex-col p-4 gap-2">
+              {NAVIGATION_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="text-base font-medium py-3 px-4 rounded-lg hover:bg-accent transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

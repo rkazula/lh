@@ -1,170 +1,206 @@
-import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
-import { api } from '@/lib/api';
-import { Product } from '@/types/api';
+import { motion } from 'framer-motion';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/features/ProductCard';
-import { SEO } from '@/components/layout/SEO';
-import { Input } from '@/components/ui/Input';
-import { Search, Filter, ArrowUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { motion, AnimatePresence } from 'framer-motion';
-
-type SortOption = 'price-asc' | 'price-desc' | 'name-asc';
+import { PRODUCTS, CATEGORIES } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 export default function Catalog() {
-  const [search, setSearch] = useState('');
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortOption>('name-asc');
+  const [selectedCategory, setSelectedCategory] = useState('Wszystkie');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  
-  const { data: products, isLoading, error } = useQuery<Product[]>({
-    queryKey: ['catalog'],
-    queryFn: api.getCatalog,
-  });
-
-  // Extract available sizes from all products
-  const availableSizes = useMemo(() => {
-    if (!products) return [];
-    const sizes = new Set<string>();
-    products.forEach(p => p.variant?.forEach(v => v.active && sizes.add(v.size)));
-    return Array.from(sizes).sort((a, b) => {
-        const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-        return order.indexOf(a) - order.indexOf(b);
-    });
-  }, [products]);
+  const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
 
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    
-    let result = products.filter((p: Product) => 
-      p.name.toLowerCase().includes(search.toLowerCase())
-    );
+    let products = [...PRODUCTS];
 
-    if (selectedSize) {
-        result = result.filter(p => p.variant?.some(v => v.size === selectedSize && v.active));
+    // Filter by category
+    if (selectedCategory !== 'Wszystkie') {
+      products = products.filter(p => p.category === selectedCategory);
     }
 
-    // Sorting
-    result.sort((a, b) => {
-        if (sort === 'price-asc') return a.price_gross - b.price_gross;
-        if (sort === 'price-desc') return b.price_gross - a.price_gross;
-        return a.name.localeCompare(b.name);
-    });
+    // Filter by search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      products = products.filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        p.description.toLowerCase().includes(query)
+      );
+    }
 
-    return result;
-  }, [products, search, selectedSize, sort]);
+    // Sort
+    if (sortBy === 'price-asc') {
+      products.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      products.sort((a, b) => b.price - a.price);
+    }
+
+    return products;
+  }, [selectedCategory, searchQuery, sortBy]);
 
   return (
-    <>
-      <SEO title="Catalog" description="Browse our full collection of silent apparel." />
-      <div className="container mx-auto px-4 py-12 space-y-8">
+    <div className="min-h-screen py-8">
+      <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 pb-6 border-b border-border/50">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Catalog</h1>
-            <p className="text-muted-foreground text-lg">Find your uniform.</p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Sklep</h1>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Odkryj naszą kolekcję minimalistycznego streetwearu
+          </p>
+        </motion.div>
+
+        {/* Search & Filters Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex flex-col md:flex-row gap-4 mb-8"
+        >
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Szukaj produktów..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-12 pl-12 pr-4 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </div>
-          
-          <div className="flex gap-4 w-full md:w-auto">
-             <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search..." 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-background/50 backdrop-blur-sm"
-                />
-             </div>
-             <Button variant="outline" size="icon" onClick={() => setShowFilters(!showFilters)} className={showFilters ? 'bg-secondary' : ''}>
-                <Filter className="h-4 w-4" />
-             </Button>
-          </div>
-        </div>
+
+          {/* Filter Toggle */}
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className="h-12 px-6 rounded-xl"
+          >
+            <SlidersHorizontal className="h-5 w-5 mr-2" />
+            Filtry
+          </Button>
+        </motion.div>
 
         {/* Filters Panel */}
-        <AnimatePresence>
-            {showFilters && (
-                <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                >
-                    <div className="p-6 bg-secondary/20 rounded-xl space-y-6">
-                        <div className="flex flex-col md:flex-row gap-8">
-                            <div className="space-y-3">
-                                <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Size</span>
-                                <div className="flex flex-wrap gap-2">
-                                    <button 
-                                        onClick={() => setSelectedSize(null)}
-                                        className={`px-3 py-1.5 text-sm rounded-lg transition-colors border ${!selectedSize ? 'bg-foreground text-background border-foreground' : 'bg-transparent border-input hover:border-foreground/50'}`}
-                                    >
-                                        All
-                                    </button>
-                                    {availableSizes.map(size => (
-                                        <button 
-                                            key={size}
-                                            onClick={() => setSelectedSize(size === selectedSize ? null : size)}
-                                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors border ${selectedSize === size ? 'bg-foreground text-background border-foreground' : 'bg-transparent border-input hover:border-foreground/50'}`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="mb-8 p-6 rounded-2xl bg-secondary/30"
+          >
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Categories */}
+              <div>
+                <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
+                  Kategoria
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={cn(
+                        'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+                        selectedCategory === category
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary hover:bg-secondary/80'
+                      )}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                            <div className="space-y-3">
-                                <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Sort By</span>
-                                <div className="flex flex-wrap gap-2">
-                                    {[
-                                        { label: 'Name (A-Z)', value: 'name-asc' },
-                                        { label: 'Price: Low to High', value: 'price-asc' },
-                                        { label: 'Price: High to Low', value: 'price-desc' },
-                                    ].map((option) => (
-                                        <button 
-                                            key={option.value}
-                                            onClick={() => setSort(option.value as SortOption)}
-                                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors border ${sort === option.value ? 'bg-foreground text-background border-foreground' : 'bg-transparent border-input hover:border-foreground/50'}`}
-                                        >
-                                            {option.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+              {/* Sort */}
+              <div>
+                <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
+                  Sortuj
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'default' as const, label: 'Domyślnie' },
+                    { value: 'price-asc' as const, label: 'Cena: rosnąco' },
+                    { value: 'price-desc' as const, label: 'Cena: malejąco' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSortBy(option.value)}
+                      className={cn(
+                        'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+                        sortBy === option.value
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary hover:bg-secondary/80'
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-        {/* Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="aspect-[4/5] bg-secondary/20 rounded-xl animate-pulse" />
+        {/* Category Pills (Mobile-friendly) */}
+        <div className="flex overflow-x-auto gap-2 pb-4 mb-8 scrollbar-hide md:hidden">
+          {CATEGORIES.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={cn(
+                'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors',
+                selectedCategory === category
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary hover:bg-secondary/80'
+              )}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        {/* Results Count */}
+        <p className="text-sm text-muted-foreground mb-6">
+          {filteredProducts.length} {filteredProducts.length === 1 ? 'produkt' : 'produktów'}
+        </p>
+
+        {/* Products Grid */}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            {filteredProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
-        ) : error ? (
-          <div className="text-center py-20 text-destructive">
-            <p>Failed to load the void. Try refreshing.</p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <AnimatePresence mode="popLayout">
-                {products?.map((product: Product, index: number) => (
-                    <ProductCard key={product.id} product={product} index={index} />
-                ))}
-            </AnimatePresence>
-          </div>
-        )}
-        
-        {!isLoading && filteredProducts.length === 0 && (
-          <div className="py-20 text-center text-muted-foreground bg-secondary/10 rounded-xl">
-            <p>No products found matching your vibe.</p>
-            <Button variant="link" onClick={() => { setSearch(''); setSelectedSize(null); }}>Clear filters</Button>
+          <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg mb-4">
+              Nie znaleziono produktów
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedCategory('Wszystkie');
+                setSearchQuery('');
+              }}
+            >
+              Wyczyść filtry
+            </Button>
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
