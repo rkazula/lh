@@ -73,17 +73,3 @@ export function InPostPicker({ open, onClose, onSelect }: InPostPickerProps) {
     </Modal>
   );
 }
-
-// Add strict typing for the custom element to avoid TS errors
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'inpost-geowidget': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
-        token?: string;
-        language?: string;
-        config?: string;
-        onpoint?: string;
-      }, HTMLElement>;
-    }
-  }
-}

@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './constants';
+import { Product, CheckoutResponse, CartQuote } from '@/types/api';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -31,15 +32,15 @@ async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getCatalog: () => fetcher<any[]>('/catalog'), // Typing as any[] initially, refined in useQuery
-  getProduct: (slug: string) => fetcher<any>(`/product/${slug}`),
+  getCatalog: () => fetcher<Product[]>('/catalog'),
+  getProduct: (slug: string) => fetcher<Product>(`/product/${slug}`),
   quoteCart: (items: { variant_id: string; quantity: number }[], discountCode?: string) =>
-    fetcher<any>('/cart/quote', {
+    fetcher<CartQuote>('/cart/quote', {
       method: 'POST',
       body: JSON.stringify({ items, discountCode }),
     }),
   createOrder: (payload: any) =>
-    fetcher<{ orderId: string; paymentUrl: string }>('/checkout/create', {
+    fetcher<CheckoutResponse>('/checkout/create', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

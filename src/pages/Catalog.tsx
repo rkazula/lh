@@ -17,7 +17,7 @@ export default function Catalog() {
   const [sort, setSort] = useState<SortOption>('name-asc');
   const [showFilters, setShowFilters] = useState(false);
   
-  const { data: products, isLoading, error } = useQuery({
+  const { data: products, isLoading, error } = useQuery<Product[]>({
     queryKey: ['catalog'],
     queryFn: api.getCatalog,
   });
@@ -151,7 +151,7 @@ export default function Catalog() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <AnimatePresence mode="popLayout">
-                {filteredProducts.map((product: Product, index: number) => (
+                {products?.map((product: Product, index: number) => (
                     <ProductCard key={product.id} product={product} index={index} />
                 ))}
             </AnimatePresence>

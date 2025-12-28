@@ -23,10 +23,10 @@ interface Window {
   }
 }
 
-// Global JSX Shim for environments where @types/react is missing or not loading
-// This fixes "Property 'div' does not exist on type 'JSX.IntrinsicElements'" errors
+// Global JSX Shim
 declare namespace JSX {
   interface IntrinsicElements {
+    'inpost-geowidget': any;
     [elemName: string]: any;
   }
 }

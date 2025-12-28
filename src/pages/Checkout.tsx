@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/layout/SEO';
-import { CartQuote, PickupPoint, PickupPointSchema } from '@/types/api';
+import { CartQuote, PickupPoint, PickupPointSchema, CheckoutResponse } from '@/types/api';
 import { MapPin, Truck, RefreshCw } from 'lucide-react';
 import { CheckoutStepper } from '@/components/features/CheckoutStepper';
 import { SummaryPanel } from '@/components/features/SummaryPanel';
@@ -102,7 +102,7 @@ export default function Checkout() {
   // Create Order Mutation
   const orderMutation = useMutation({
     mutationFn: api.createOrder,
-    onSuccess: (data) => {
+    onSuccess: (data: CheckoutResponse) => {
       clearCart();
       window.location.href = data.paymentUrl;
     },
