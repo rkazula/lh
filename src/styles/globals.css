@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Apple/macOS Light Mode - Cool & Crisp */
+    --background: 0 0% 98%;       /* Very light grey, almost white */
+    --foreground: 240 10% 3.9%;   /* Almost black */
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 211 100% 50%;      /* Vivid Blue */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;  /* Light grey surface */
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;       /* Subtle borders */
+    --input: 240 5.9% 90%;
+    --ring: 211 100% 50%;
+
+    --radius: 0.75rem;            /* Rounded corners */
+  }
+
+  .dark {
+    /* Apple/macOS Dark Mode - Deep & Vibrant */
+    --background: 240 10% 3.9%;   /* Deep dark grey, not pure black */
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 211 100% 60%;      /* Slightly lighter blue for dark mode */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 211 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    /* Smooth font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Glassmorphism Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-white/70 dark:bg-black/70 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-sm;
+  }
+  
+  .glass-panel {
+    @apply bg-white/50 dark:bg-black/50 backdrop-blur-2xl border border-white/20 dark:border-white/5 shadow-lg;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
