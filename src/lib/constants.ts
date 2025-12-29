@@ -1,5 +1,6 @@
 import productHoodie from '@/assets/product-hoodie.jpg';
-import productTee from '@/assets/product-tee.jpg';
+import bad_queen from '@/assets/lh_tshirt_bad_queen.png';
+import banana_brain from '@/assets/lh_tshirt_banana_brain.png';
 import productJoggers from '@/assets/product-joggers.jpg';
 import productJacket from '@/assets/product-jacket.jpg';
 import productCap from '@/assets/product-cap.jpg';
@@ -49,25 +50,26 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: '2',
-    name: 'Introvert Tee',
-    slug: 'introvert-tee',
-    price: 149,
+    name: 'Local Haters Bad Queen T-shirt',
+    slug: 'bad-queen',
+    price: 99,
     description: 'Klasyczny t-shirt z delikatnym haftem. 100% organiczna bawełna. Luźny krój oversize dla maksymalnego komfortu.',
     category: 'T-shirty',
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
     colors: ['Biały', 'Czarny', 'Granat'],
-    images: [productTee],
+    images: [bad_queen],
+    badge: 'Nowa kolekcja!',
   },
   {
     id: '3',
-    name: 'Quiet Joggers',
-    slug: 'quiet-joggers',
-    price: 279,
-    description: 'Wygodne joggersy z premium french terry. Elastyczny pas i mankiety. Idealne zarówno do domu jak i na miasto.',
-    category: 'Spodnie',
+    name: 'Local Haters Banana Brain T-shirt',
+    slug: 'banana-brain',
+    price: 79,
+    description: 'T-shirt Banana Brain. Elastyczny i zabawny. Idealny zarówno do domu jak i na miasto.',
+    category: 'T-shirty',
     sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Czarny', 'Szary Melanż'],
-    images: [productJoggers],
+    colors: ['Biały', 'Szary Melanż'],
+    images: [banana_brain],
   },
   {
     id: '4',

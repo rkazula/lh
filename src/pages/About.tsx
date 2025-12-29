@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Leaf, Heart, Shield, Users } from 'lucide-react';
+import lhLogo from '../assets/lh_logo.jpg';
 
 export default function About() {
   const values = [
@@ -52,9 +53,11 @@ export default function About() {
           className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20"
         >
           <div className="aspect-square rounded-3xl bg-secondary overflow-hidden">
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              <span className="text-6xl font-bold tracking-tighter opacity-20">LH</span>
-            </div>
+            <img 
+              src={lhLogo} 
+              alt="Local Haters History" 
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="space-y-6">
             <h2 className="text-3xl font-bold tracking-tight">Nasza historia</h2>
@@ -63,12 +66,12 @@ export default function About() {
               i nadmiaru, brakowało marki, która celebrowałaby ciszę i prostotę.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Zaczęliśmy w 2023 roku od małego studia w Warszawie, tworząc ubrania 
-              dla siebie i przyjaciół. Dziś nasza społeczność liczy tysiące osób, 
-              które podzielają naszą filozofię — mniej znaczy więcej.
+              Zaczęliśmy w 2023 roku od małego studia w Łodzi, tworząc ubrania
+              dla siebie i naszych przyjaciół. Dziś nasza społeczność liczy tysiące osób,
+              które podzielają naszą filozofię - mniej znaczy więcej.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Każdy nasz produkt jest wynikiem miesięcy pracy nad designem, 
+              Każdy nasz produkt jest wynikiem kreatywnej pracy nad designem,
               doborem materiałów i testowaniem. Nie śpieszymy się. Nie gonimy trendów. 
               Tworzymy rzeczy, które mają sens.
             </p>
