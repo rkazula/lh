@@ -36,6 +36,11 @@ export function Footer() {
                   Nowości
                 </Link>
               </li>
+              <li>
+                <Link to="/order-tracking" className="hover:text-foreground transition-colors">
+                  Śledź zamówienie
+                </Link>
+              </li>
             </ul>
           </div>
 

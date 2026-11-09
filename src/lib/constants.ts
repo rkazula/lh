@@ -1,10 +1,11 @@
 import productHoodie from '@/assets/product-hoodie.jpg';
-import bad_queen from '@/assets/lh_tshirt_bad_queen.png';
-import banana_brain from '@/assets/lh_tshirt_banana_brain.png';
+import bad_queen from '@/assets/lh_tshirt_bad_queen.webp';
+import banana_brain from '@/assets/lh_tshirt_banana_brain.webp';
 import productJoggers from '@/assets/product-joggers.jpg';
 import productJacket from '@/assets/product-jacket.jpg';
 import productCap from '@/assets/product-cap.jpg';
 import productCrewneck from '@/assets/product-crewneck.jpg';
+import productTee from '@/assets/product-tee.jpg';
 
 export const APP_NAME = 'Local Haters';
 
@@ -12,6 +13,7 @@ export const NAVIGATION_LINKS = [
   { label: 'Sklep', href: '/catalog' },
   { label: 'Kolekcje', href: '/collections' },
   { label: 'O Nas', href: '/about' },
+  { label: 'Śledź zamówienie', href: '/order-tracking' },
 ];
 
 export const ANIMATION_VARIANTS = {
@@ -32,6 +34,7 @@ export interface Product {
   colors: string[];
   images: string[];
   badge?: string;
+  collectionId?: string;
 }
 
 export const PRODUCTS: Product[] = [
@@ -47,6 +50,7 @@ export const PRODUCTS: Product[] = [
     colors: ['Czarny', 'Szary'],
     images: [productHoodie],
     badge: 'Bestseller',
+    collectionId: 'silence-2026',
   },
   {
     id: '2',
@@ -59,6 +63,7 @@ export const PRODUCTS: Product[] = [
     colors: ['Biały', 'Czarny', 'Granat'],
     images: [bad_queen],
     badge: 'Nowa kolekcja!',
+    collectionId: 'urban-escape',
   },
   {
     id: '3',
@@ -70,6 +75,7 @@ export const PRODUCTS: Product[] = [
     sizes: ['S', 'M', 'L', 'XL'],
     colors: ['Biały', 'Szary Melanż'],
     images: [banana_brain],
+    collectionId: 'urban-escape',
   },
   {
     id: '4',
@@ -83,6 +89,7 @@ export const PRODUCTS: Product[] = [
     colors: ['Czarny', 'Oliwkowy'],
     images: [productJacket],
     badge: 'Nowość',
+    collectionId: 'urban-escape',
   },
   {
     id: '5',
@@ -94,6 +101,7 @@ export const PRODUCTS: Product[] = [
     sizes: ['One Size'],
     colors: ['Czarny', 'Granat'],
     images: [productCap],
+    collectionId: 'silence-2026',
   },
   {
     id: '6',
@@ -105,6 +113,33 @@ export const PRODUCTS: Product[] = [
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     colors: ['Kremowy', 'Szary', 'Czarny'],
     images: [productCrewneck],
+    collectionId: 'silence-2026',
+  },
+  {
+    id: '7',
+    name: 'Silence Heavy Joggers',
+    slug: 'silence-heavy-joggers',
+    price: 279,
+    originalPrice: 329,
+    description: 'Wygodne spodnie dresowe wykonane ze szczotkowanej bawełny 400gsm. Głębokie kieszenie, minimalistyczny krój i ściągacze przy kostkach.',
+    category: 'Spodnie',
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: ['Czarny', 'Szary Melanż'],
+    images: [productJoggers],
+    badge: 'Nowość',
+    collectionId: 'silence-2026',
+  },
+  {
+    id: '8',
+    name: 'Raw Silence Heavy Tee',
+    slug: 'raw-silence-tee',
+    price: 139,
+    description: 'Gęsto tkana koszulka z grubej bawełny organicznej 260gsm. Pudełkowy krój boxy fit z obniżoną linią ramion.',
+    category: 'T-shirty',
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: ['Biały', 'Czarny'],
+    images: [productTee],
+    collectionId: 'silence-2026',
   },
 ];
 

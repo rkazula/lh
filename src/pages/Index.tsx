@@ -1,5 +1,7 @@
+import Home from "./Home";
+
 const Index = () => {
-  return null;
+  return <Home />;
 };
 
 export default Index;
