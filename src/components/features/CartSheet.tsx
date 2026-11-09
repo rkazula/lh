@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function CartSheet() {
-  const { items, isSheetOpen, closeSheet, removeItem, updateQuantity, getTotalPrice } = useCartStore();
+  const { items, isSheetOpen, closeSheet, removeItem, updateQuantity, getTotalPrice, getTotalItems } = useCartStore();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pl-PL', {
@@ -15,13 +15,15 @@ export function CartSheet() {
     }).format(price);
   };
 
+  const totalItemsCount = getTotalItems();
+
   return (
     <Sheet open={isSheetOpen} onOpenChange={closeSheet}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingBag className="h-5 w-5" />
-            Koszyk ({items.length})
+            Koszyk ({totalItemsCount})
           </SheetTitle>
         </SheetHeader>
 
@@ -72,6 +74,7 @@ export function CartSheet() {
                       <button
                         onClick={() => removeItem(item.variantId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
+                        aria-label={`Usuń ${item.name} z koszyka`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -79,6 +82,7 @@ export function CartSheet() {
                         <button
                           onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
                           className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-accent transition-colors"
+                          aria-label={`Zmniejsz ilość ${item.name}`}
                         >
                           <Minus className="h-4 w-4" />
                         </button>
@@ -86,6 +90,7 @@ export function CartSheet() {
                         <button
                           onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                           className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-accent transition-colors"
+                          aria-label={`Zwiększ ilość ${item.name}`}
                         >
                           <Plus className="h-4 w-4" />
                         </button>

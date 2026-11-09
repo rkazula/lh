@@ -2,17 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  originalPrice?: number;
-  images: string[];
-  badge?: string;
-  category: string;
-}
+import type { Product } from '@/lib/constants';
 
 interface ProductCardProps {
   product: Product;

@@ -102,6 +102,7 @@ export function Header() {
                 <Link
                   key={link.href}
                   to={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
                   className="text-base font-medium py-3 px-4 rounded-lg hover:bg-accent transition-colors"
                 >
                   {link.label}

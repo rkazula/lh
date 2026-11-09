@@ -31,15 +31,22 @@ export default function Collections() {
             >
               <Link
                 to={`/catalog?collection=${collection.id}`}
-                className="group block relative aspect-[4/3] rounded-3xl overflow-hidden bg-secondary"
+                className="group block relative aspect-[4/3] rounded-3xl overflow-hidden bg-secondary shadow-md"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent z-10" />
+                {collection.image && (
+                  <img
+                    src={collection.image}
+                    alt={collection.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
                 <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
                 
                 <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2">{collection.name}</h2>
-                  <p className="text-muted-foreground mb-4">{collection.description}</p>
-                  <span className="inline-flex items-center text-primary font-medium group-hover:gap-3 gap-2 transition-all">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight">{collection.name}</h2>
+                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed max-w-md">{collection.description}</p>
+                  <span className="inline-flex items-center text-primary font-medium group-hover:gap-3 gap-2 transition-all text-sm">
                     Przeglądaj kolekcję
                     <ArrowRight className="h-4 w-4" />
                   </span>
@@ -50,12 +57,7 @@ export default function Collections() {
         </div>
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-center mt-16"
-        >
+        <div className="text-center mt-16">
           <p className="text-muted-foreground mb-4">
             Nie możesz się zdecydować? Przeglądaj wszystkie produkty
           </p>
@@ -64,7 +66,7 @@ export default function Collections() {
               Zobacz cały sklep
             </Button>
           </Link>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

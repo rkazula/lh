@@ -7,6 +7,14 @@ import { ProductCard } from '@/components/features/ProductCard';
 import { PRODUCTS, CATEGORIES, COLLECTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
+// Pomocnicza funkcja normalizująca polskie znaki diakrytyczne do wyszukiwania
+const normalizeSearchText = (text: string) =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ł/g, 'l');
+
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const collectionParam = searchParams.get('collection') || '';
@@ -26,22 +34,22 @@ export default function Catalog() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
 
+  // Precyzyjna synchronizacja stanu z parametrami URL w obie strony
   useEffect(() => {
-    if (collectionParam) {
-      setSelectedCollection(collectionParam);
+    setSelectedCollection(collectionParam);
+
+    if (categoryParam === 'new') {
+      setOnlyNew(true);
+      setSelectedCategory('Wszystkie');
+    } else if (categoryParam && CATEGORIES.includes(categoryParam)) {
+      setSelectedCategory(categoryParam);
+      setOnlyNew(false);
+    } else {
+      setSelectedCategory('Wszystkie');
+      setOnlyNew(false);
     }
-    if (categoryParam) {
-      if (categoryParam === 'new') {
-        setOnlyNew(true);
-        setSelectedCategory('Wszystkie');
-      } else if (CATEGORIES.includes(categoryParam)) {
-        setSelectedCategory(categoryParam);
-        setOnlyNew(false);
-      }
-    }
-    if (queryParam) {
-      setSearchQuery(queryParam);
-    }
+
+    setSearchQuery(queryParam);
   }, [collectionParam, categoryParam, queryParam]);
 
   const activeCollectionName = useMemo(() => {
@@ -53,35 +61,35 @@ export default function Catalog() {
   const filteredProducts = useMemo(() => {
     let products = [...PRODUCTS];
 
-    // Filter by collection
+    // Filtrowanie po kolekcji
     if (selectedCollection) {
       products = products.filter((p) => p.collectionId === selectedCollection);
     }
 
-    // Filter by 'new' badge
+    // Filtrowanie po nowościach
     if (onlyNew) {
       products = products.filter(
         (p) => p.badge && (p.badge.toLowerCase().includes('nowo') || p.badge.toLowerCase().includes('nowa'))
       );
     }
 
-    // Filter by category
+    // Filtrowanie po kategorii
     if (selectedCategory !== 'Wszystkie') {
       products = products.filter((p) => p.category === selectedCategory);
     }
 
-    // Filter by search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    // Wyszukiwanie z normalizacją polskich znaków
+    if (searchQuery.trim()) {
+      const query = normalizeSearchText(searchQuery.trim());
       products = products.filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
+          normalizeSearchText(p.name).includes(query) ||
+          normalizeSearchText(p.description).includes(query) ||
+          normalizeSearchText(p.category).includes(query)
       );
     }
 
-    // Sort
+    // Sortowanie
     if (sortBy === 'price-asc') {
       products.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
@@ -97,6 +105,13 @@ export default function Catalog() {
     setOnlyNew(false);
     setSearchQuery('');
     setSearchParams({});
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('q');
+    setSearchParams(newParams);
   };
 
   const handleCategorySelect = (category: string) => {
@@ -131,25 +146,22 @@ export default function Catalog() {
         </motion.div>
 
         {/* Search & Filters Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex flex-col md:flex-row gap-4 mb-4"
-        >
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
           {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Szukaj produktów..."
+              aria-label="Szukaj produktów"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full h-12 pl-12 pr-4 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                type="button"
+                onClick={handleClearSearch}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label="Wyczyść wyszukiwanie"
               >
@@ -163,11 +175,12 @@ export default function Catalog() {
             variant="outline"
             onClick={() => setShowFilters(!showFilters)}
             className="h-12 px-6 rounded-xl"
+            aria-label="Rozwiń dodatkowe filtry i sortowanie"
           >
             <SlidersHorizontal className="h-5 w-5 mr-2" />
-            Filtry
+            Sortowanie i kolekcje
           </Button>
-        </motion.div>
+        </div>
 
         {/* Active Filter Chips */}
         {(selectedCollection || onlyNew || selectedCategory !== 'Wszystkie' || searchQuery) && (
@@ -177,6 +190,7 @@ export default function Catalog() {
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
                 Kolekcja: {activeCollectionName}
                 <button
+                  type="button"
                   onClick={() => {
                     setSelectedCollection('');
                     const newParams = new URLSearchParams(searchParams);
@@ -194,6 +208,7 @@ export default function Catalog() {
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
                 Nowości
                 <button
+                  type="button"
                   onClick={() => {
                     setOnlyNew(false);
                     const newParams = new URLSearchParams(searchParams);
@@ -211,6 +226,7 @@ export default function Catalog() {
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-secondary text-foreground">
                 Kategoria: {selectedCategory}
                 <button
+                  type="button"
                   onClick={() => handleCategorySelect('Wszystkie')}
                   className="hover:text-destructive"
                   aria-label="Usuń filtr kategorii"
@@ -223,7 +239,8 @@ export default function Catalog() {
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-secondary text-foreground">
                 Szukaj: &quot;{searchQuery}&quot;
                 <button
-                  onClick={() => setSearchQuery('')}
+                  type="button"
+                  onClick={handleClearSearch}
                   className="hover:text-destructive"
                   aria-label="Usuń frazę wyszukiwania"
                 >
@@ -232,6 +249,7 @@ export default function Catalog() {
               </span>
             )}
             <button
+              type="button"
               onClick={handleClearFilters}
               className="text-xs text-muted-foreground hover:text-foreground underline ml-2"
             >
@@ -242,36 +260,8 @@ export default function Catalog() {
 
         {/* Filters Panel */}
         {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="mb-8 p-6 rounded-2xl bg-secondary/30 border border-border"
-          >
+          <div className="mb-8 p-6 rounded-2xl bg-secondary/30 border border-border">
             <div className="flex flex-col md:flex-row gap-8">
-              {/* Categories */}
-              <div>
-                <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
-                  Kategoria
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => handleCategorySelect(category)}
-                      className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-colors',
-                        selectedCategory === category && !onlyNew
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary hover:bg-secondary/80'
-                      )}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Collections Filter */}
               <div>
                 <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
@@ -279,6 +269,7 @@ export default function Catalog() {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   <button
+                    type="button"
                     onClick={() => {
                       setSelectedCollection('');
                       const newParams = new URLSearchParams(searchParams);
@@ -297,6 +288,7 @@ export default function Catalog() {
                   {COLLECTIONS.map((col) => (
                     <button
                       key={col.id}
+                      type="button"
                       onClick={() => {
                         setSelectedCollection(col.id);
                         const newParams = new URLSearchParams(searchParams);
@@ -319,7 +311,7 @@ export default function Catalog() {
               {/* Sort */}
               <div>
                 <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">
-                  Sortuj
+                  Sortuj według ceny
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -329,6 +321,7 @@ export default function Catalog() {
                   ].map((option) => (
                     <button
                       key={option.value}
+                      type="button"
                       onClick={() => setSortBy(option.value)}
                       className={cn(
                         'px-4 py-2 rounded-full text-sm font-medium transition-colors',
@@ -343,14 +336,15 @@ export default function Catalog() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* Category Pills (Mobile-friendly) */}
-        <div className="flex overflow-x-auto gap-2 pb-4 mb-8 scrollbar-hide md:hidden">
+        {/* Category Pills (Visible for both desktop & mobile) */}
+        <div className="flex overflow-x-auto md:flex-wrap gap-2 pb-4 mb-8 scrollbar-hide">
           {CATEGORIES.map((category) => (
             <button
               key={category}
+              type="button"
               onClick={() => handleCategorySelect(category)}
               className={cn(
                 'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors',

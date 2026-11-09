@@ -148,11 +148,13 @@ export const COLLECTIONS = [
     id: 'silence-2026',
     name: 'Silence 2026',
     description: 'Kolekcja inspirowana ciszą i spokojem. Minimalistyczne formy, premium materiały.',
+    image: productHoodie,
   },
   {
     id: 'urban-escape',
     name: 'Urban Escape',
     description: 'Streetwear dla tych, którzy szukają ucieczki od miejskiego zgiełku.',
+    image: productJacket,
   },
 ];
 
