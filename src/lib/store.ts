@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { PRODUCTS } from './constants';
 
 // --- Cart Store ---
 export interface CartItem {
@@ -25,6 +26,12 @@ interface CartState {
   getTotalPrice: () => number;
 }
 
+// Pomocnicza funkcja walidująca cenę produktu względem katalogu
+const getAuthoritativePrice = (productId: string, fallbackPrice: number): number => {
+  const catalogProduct = PRODUCTS.find((p) => p.id === productId);
+  return catalogProduct ? catalogProduct.price : fallbackPrice;
+};
+
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
@@ -34,34 +41,59 @@ export const useCartStore = create<CartState>()(
       closeSheet: () => set({ isSheetOpen: false }),
       addItem: (item) =>
         set((state) => {
-          const existing = state.items.find((i) => i.variantId === item.variantId);
+          const validatedQuantity = Math.max(1, Math.floor(item.quantity || 1));
+          const validatedPrice = getAuthoritativePrice(item.productId, item.price);
+          const sanitizedItem = {
+            ...item,
+            price: validatedPrice,
+            quantity: validatedQuantity,
+          };
+
+          const existing = state.items.find((i) => i.variantId === sanitizedItem.variantId);
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.variantId === item.variantId
-                  ? { ...i, quantity: i.quantity + item.quantity }
+                i.variantId === sanitizedItem.variantId
+                  ? { ...i, price: validatedPrice, quantity: i.quantity + validatedQuantity }
                   : i
               ),
             };
           }
-          return { items: [...state.items, item] };
+          return { items: [...state.items, sanitizedItem] };
         }),
       removeItem: (id) =>
         set((state) => ({ items: state.items.filter((i) => i.variantId !== id) })),
       updateQuantity: (id, qty) =>
         set((state) => {
-          if (qty < 1) return { items: state.items.filter((i) => i.variantId !== id) };
+          const cleanQty = Math.floor(qty);
+          if (cleanQty < 1) return { items: state.items.filter((i) => i.variantId !== id) };
           return {
             items: state.items.map((i) =>
-              i.variantId === id ? { ...i, quantity: qty } : i
+              i.variantId === id ? { ...i, quantity: cleanQty } : i
             ),
           };
         }),
       clearCart: () => set({ items: [] }),
       getTotalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
-      getTotalPrice: () => get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+      getTotalPrice: () =>
+        get().items.reduce((acc, item) => {
+          const price = getAuthoritativePrice(item.productId, item.price);
+          return acc + price * item.quantity;
+        }, 0),
     }),
-    { name: 'cart-storage' }
+    {
+      name: 'cart-storage',
+      onRehydrateStorage: () => (state) => {
+        // Po odczytaniu z localStorage upewniamy się, że ceny są zgodne z aktualnym katalogiem
+        if (state && Array.isArray(state.items)) {
+          state.items = state.items.map((item) => ({
+            ...item,
+            price: getAuthoritativePrice(item.productId, item.price),
+            quantity: Math.max(1, Math.floor(item.quantity || 1)),
+          }));
+        }
+      },
+    }
   )
 );
 
@@ -81,7 +113,10 @@ interface ToastState {
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   addToast: (message, type = 'info') => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2, 11);
     set((state) => ({ toasts: [...state.toasts, { id, message, type }] }));
     setTimeout(() => {
       set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));

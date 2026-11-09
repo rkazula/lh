@@ -9,12 +9,17 @@ import { cn } from '@/lib/utils';
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
-  const product = PRODUCTS.find(p => p.slug === slug);
-  
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [selectedColor, setSelectedColor] = useState<string>('');
+  const product = PRODUCTS.find((p) => p.slug === slug);
+
+  // Automatyczny wybór, jeśli dostępny jest tylko jeden rozmiar / kolor
+  const [selectedSize, setSelectedSize] = useState<string>(() =>
+    product && product.sizes.length === 1 ? product.sizes[0] : ''
+  );
+  const [selectedColor, setSelectedColor] = useState<string>(() =>
+    product && product.colors.length === 1 ? product.colors[0] : ''
+  );
   const [quantity, setQuantity] = useState(1);
-  
+
   const { addItem, openSheet } = useCartStore();
   const { addToast } = useToastStore();
 
@@ -39,23 +44,27 @@ export default function ProductPage() {
   };
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      addToast('Wybierz rozmiar', 'error');
+    if (product.sizes.length > 0 && !selectedSize) {
+      addToast('Wybierz rozmiar produktu', 'error');
       return;
     }
-    if (!selectedColor && product.colors.length > 0) {
-      addToast('Wybierz kolor', 'error');
+    if (product.colors.length > 0 && !selectedColor) {
+      addToast('Wybierz wariant kolorystyczny', 'error');
       return;
     }
 
+    const cleanQty = Math.max(1, Math.floor(quantity));
+    const variantLabel = [selectedSize, selectedColor].filter(Boolean).join(' / ') || 'Standard';
+    const variantKey = `${product.id}-${selectedSize || 'std'}-${selectedColor || 'std'}`;
+
     addItem({
-      variantId: `${product.id}-${selectedSize}-${selectedColor}`,
+      variantId: variantKey,
       productId: product.id,
       name: product.name,
-      variantName: `${selectedSize}${selectedColor ? ` / ${selectedColor}` : ''}`,
+      variantName: variantLabel,
       price: product.price,
       image: product.images[0],
-      quantity,
+      quantity: cleanQty,
     });
 
     addToast(`Dodano ${product.name} do koszyka`, 'success');
@@ -70,11 +79,7 @@ export default function ProductPage() {
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         {/* Back Link */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <Link
             to="/catalog"
             className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
@@ -82,15 +87,11 @@ export default function ProductPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Powrót do sklepu
           </Link>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Product Image */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-secondary"
-          >
+          <div className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-secondary">
             <img
               src={product.images[0]}
               alt={product.name}
@@ -106,15 +107,10 @@ export default function ProductPage() {
                 -{discount}%
               </span>
             )}
-          </motion.div>
+          </div>
 
           {/* Product Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="space-y-8"
-          >
+          <div className="space-y-8">
             {/* Header */}
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
@@ -139,27 +135,30 @@ export default function ProductPage() {
             </p>
 
             {/* Size Selection */}
-            <div>
-              <h3 className="text-sm font-medium uppercase tracking-wider mb-3">
-                Rozmiar
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={cn(
-                      'min-w-[60px] h-12 px-4 rounded-xl font-medium transition-all',
-                      selectedSize === size
-                        ? 'bg-primary text-primary-foreground shadow-lg'
-                        : 'bg-secondary hover:bg-secondary/80'
-                    )}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {product.sizes.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium uppercase tracking-wider mb-3">
+                  Rozmiar {product.sizes.length === 1 && '(Jeden uniwersalny)'}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSelectedSize(size)}
+                      className={cn(
+                        'min-w-[60px] h-12 px-4 rounded-xl font-medium transition-all',
+                        selectedSize === size
+                          ? 'bg-primary text-primary-foreground shadow-lg'
+                          : 'bg-secondary hover:bg-secondary/80'
+                      )}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Color Selection */}
             {product.colors.length > 0 && (
@@ -171,6 +170,7 @@ export default function ProductPage() {
                   {product.colors.map((color) => (
                     <button
                       key={color}
+                      type="button"
                       onClick={() => setSelectedColor(color)}
                       className={cn(
                         'px-4 py-2 rounded-xl font-medium transition-all',
@@ -194,15 +194,19 @@ export default function ProductPage() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center rounded-xl bg-secondary">
                   <button
+                    type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="w-12 h-12 flex items-center justify-center hover:bg-accent rounded-l-xl transition-colors"
+                    aria-label="Zmniejsz ilość"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
                   <span className="w-12 text-center font-medium">{quantity}</span>
                   <button
+                    type="button"
                     onClick={() => setQuantity(quantity + 1)}
                     className="w-12 h-12 flex items-center justify-center hover:bg-accent rounded-r-xl transition-colors"
+                    aria-label="Zwiększ ilość"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -217,7 +221,7 @@ export default function ProductPage() {
               className="w-full h-14 rounded-xl text-base font-semibold"
             >
               <ShoppingBag className="h-5 w-5 mr-2" />
-              Dodaj do koszyka — {formatPrice(product.price * quantity)}
+              Dodaj do koszyka — {formatPrice(product.price * Math.max(1, quantity))}
             </Button>
 
             {/* Benefits */}
@@ -241,7 +245,7 @@ export default function ProductPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

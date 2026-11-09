@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Search, Package, Truck, CheckCircle, Clock, MapPin, AlertCircle } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { ANIMATION_VARIANTS } from '@/lib/constants';
 
 interface OrderItem {
     variantId: string;
@@ -33,11 +31,11 @@ interface Order {
 }
 
 const ORDER_STATUSES = [
-    { key: 'pending', label: 'Oczekuje na płatność', icon: Clock, color: 'text-yellow-500' },
-    { key: 'paid', label: 'Opłacone', icon: CheckCircle, color: 'text-green-500' },
-    { key: 'processing', label: 'W realizacji', icon: Package, color: 'text-blue-500' },
-    { key: 'shipped', label: 'Wysłane', icon: Truck, color: 'text-purple-500' },
-    { key: 'delivered', label: 'Dostarczone', icon: MapPin, color: 'text-green-600' },
+    { key: 'pending', label: 'Oczekuje na płatność', icon: Clock },
+    { key: 'paid', label: 'Opłacone', icon: CheckCircle },
+    { key: 'processing', label: 'W realizacji', icon: Package },
+    { key: 'shipped', label: 'Wysłane', icon: Truck },
+    { key: 'delivered', label: 'Dostarczone', icon: MapPin },
 ];
 
 const OrderTracking: React.FC = () => {
@@ -66,7 +64,6 @@ const OrderTracking: React.FC = () => {
         setHasSearched(true);
 
         try {
-            // Bezpieczny odczyt z bazy — wybieramy wyłącznie dane statusowe przesyłki bez PII
             const { data, error: fetchError } = await supabase
                 .from('orders')
                 .select('id, order_id, inpost_point_name, inpost_point_address, items, subtotal, shipping_cost, total, status, created_at, paid_at')
@@ -79,7 +76,7 @@ const OrderTracking: React.FC = () => {
             } else {
                 const orderData: Order = {
                     ...data,
-                    items: (data.items || []) as unknown as OrderItem[],
+                    items: (Array.isArray(data.items) ? data.items : []) as unknown as OrderItem[],
                 };
                 setOrder(orderData);
                 if (urlOrderId !== data.order_id) {
@@ -116,13 +113,7 @@ const OrderTracking: React.FC = () => {
     };
 
     return (
-        <motion.div
-            initial={ANIMATION_VARIANTS.pageInitial}
-            animate={ANIMATION_VARIANTS.pageAnimate}
-            exit={ANIMATION_VARIANTS.pageExit}
-            transition={{ duration: 0.4 }}
-            className="min-h-screen py-12"
-        >
+        <div className="min-h-screen py-12">
             <div className="container mx-auto px-4 max-w-2xl">
                 <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center tracking-tight">Śledź Zamówienie</h1>
 
@@ -142,7 +133,7 @@ const OrderTracking: React.FC = () => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="font-mono text-sm"
                             />
-                            <Button type="submit" disabled={loading || !searchQuery.trim()}>
+                            <Button type="submit" disabled={loading || !searchQuery.trim()} aria-label="Szukaj zamówienia">
                                 {loading ? (
                                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                 ) : (
@@ -279,7 +270,7 @@ const OrderTracking: React.FC = () => {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Dostawa</span>
-                                        <span>{formatPrice(order.shipping_cost)}</span>
+                                        <span>{order.shipping_cost === 0 ? <strong className="text-green-500">GRATIS</strong> : formatPrice(order.shipping_cost)}</span>
                                     </div>
                                     <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
                                         <span>Razem</span>
@@ -291,7 +282,7 @@ const OrderTracking: React.FC = () => {
                     </>
                 )}
             </div>
-        </motion.div>
+        </div>
     );
 };
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Package, Loader2, Navigation, AlertCircle } from 'lucide-react';
+import { MapPin, Package, Loader2, Navigation, AlertCircle, Tag, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCartStore, useToastStore } from '@/lib/store';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ANIMATION_VARIANTS } from '@/lib/constants';
 
@@ -23,7 +23,7 @@ interface InPostPoint {
     distance?: number;
 }
 
-// Zestaw punktów InPost (wersja demonstracyjna z możliwością rozszerzenia o API InPost ShipX)
+// Zestaw przykładowych punktów InPost (z możliwością wpisania dowolnego własnego kodu Paczkomatu)
 const MOCK_INPOST_POINTS: InPostPoint[] = [
     { name: 'WAW123M', address: { line1: 'ul. Marszałkowska 100', line2: '00-001 Warszawa' }, location: { latitude: 52.2297, longitude: 21.0122 } },
     { name: 'WAW456A', address: { line1: 'ul. Aleje Jerozolimskie 50', line2: '00-024 Warszawa' }, location: { latitude: 52.2260, longitude: 21.0030 } },
@@ -41,15 +41,17 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 };
 
+const FREE_SHIPPING_THRESHOLD = 300;
+
 const Checkout: React.FC = () => {
-    const { items, getTotalPrice, clearCart } = useCartStore();
+    const { items, getTotalPrice } = useCartStore();
     const { addToast } = useToastStore();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -61,6 +63,7 @@ const Checkout: React.FC = () => {
         address: '',
     });
 
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [selectedPoint, setSelectedPoint] = useState<InPostPoint | null>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -69,17 +72,22 @@ const Checkout: React.FC = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Obsługa kodu rabatowego
+    const [discountCodeInput, setDiscountCodeInput] = useState('');
+    const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; percent: number } | null>(null);
+
     useEffect(() => {
         if (searchParams.get('canceled') === 'true') {
-            addToast('Płatność została anulowana. Możesz spróbować ponownie.', 'error');
+            addToast('Płatność została anulowana. Twoje produkty nadal czekają w koszyku.', 'error');
         }
     }, [searchParams, addToast]);
 
     useEffect(() => {
-        if (items.length === 0) {
+        // Jeśli koszyk jest pusty i nie wracamy z anulowanej płatności, przejdź do katalogu
+        if (items.length === 0 && searchParams.get('canceled') !== 'true') {
             navigate('/catalog');
         }
-    }, [items, navigate]);
+    }, [items, navigate, searchParams]);
 
     const getGeolocation = useCallback(() => {
         setIsLoadingLocation(true);
@@ -102,7 +110,7 @@ const Checkout: React.FC = () => {
                 (error) => {
                     console.warn('Geolocation warning:', error.message);
                     setIsLoadingLocation(false);
-                    addToast('Nie udało się pobrać lokalizacji — wpisz miasto ręcznie', 'error');
+                    addToast('Nie udało się pobrać lokalizacji — wpisz miasto lub kod ręcznie', 'error');
                 },
                 { timeout: 8000 }
             );
@@ -126,6 +134,40 @@ const Checkout: React.FC = () => {
         }
     };
 
+    const handleApplyDiscount = (e: React.FormEvent) => {
+        e.preventDefault();
+        const code = discountCodeInput.trim().toUpperCase();
+        if (!code) return;
+
+        if (code === 'SILENCE10') {
+            setAppliedDiscount({ code: 'SILENCE10', percent: 10 });
+            addToast('Kod rabatowy 10% został pomyślnie naliczony!', 'success');
+            setDiscountCodeInput('');
+        } else {
+            addToast('Wprowadzony kod rabatowy jest nieprawidłowy', 'error');
+        }
+    };
+
+    const handleSelectCustomPoint = () => {
+        const cleanCode = searchQuery.trim().toUpperCase();
+        if (cleanCode.length < 3) {
+            addToast('Wprowadź prawidłowy identyfikator paczkomatu (np. KRA01M)', 'error');
+            return;
+        }
+
+        const customPoint: InPostPoint = {
+            name: cleanCode,
+            address: {
+                line1: `Paczkomat ${cleanCode}`,
+                line2: formData.address || 'Polska',
+            },
+            location: { latitude: 52.0, longitude: 20.0 },
+        };
+        setSelectedPoint(customPoint);
+        if (errors.point) setErrors(prev => ({ ...prev, point: '' }));
+        addToast(`Wybrano Paczkomat: ${cleanCode}`, 'success');
+    };
+
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
 
@@ -138,19 +180,22 @@ const Checkout: React.FC = () => {
             newErrors.email = 'Wprowadź prawidłowy adres e-mail';
         }
 
-        if (formData.phone.trim()) {
-            const phoneDigits = formData.phone.replace(/[\s+-]/g, '');
-            if (phoneDigits.length < 9) {
-                newErrors.phone = 'Numer telefonu musi mieć co najmniej 9 cyfr';
-            }
+        // Telefon jest bezwzględnie wymagany przez InPost do powiadomień SMS o odbiorze
+        const phoneDigits = formData.phone.replace(/[\s+-]/g, '');
+        if (!formData.phone.trim() || phoneDigits.length < 9) {
+            newErrors.phone = 'Numer telefonu jest wymagany do odbioru w Paczkomacie (min. 9 cyfr)';
         }
 
         if (!formData.address.trim() || formData.address.trim().length < 5) {
-            newErrors.address = 'Podaj poprawny adres rozliczeniowy (ulica, kod, miasto)';
+            newErrors.address = 'Podaj poprawny adres zamieszkania / rozliczeniowy (ulica, kod, miasto)';
         }
 
         if (!selectedPoint) {
             newErrors.point = 'Wybierz Paczkomat InPost do odbioru przesyłki';
+        }
+
+        if (!acceptedTerms) {
+            newErrors.terms = 'Musisz zaakceptować Regulamin i Politykę Prywatności, aby sfinalizować zamówienie';
         }
 
         setErrors(newErrors);
@@ -186,11 +231,12 @@ const Checkout: React.FC = () => {
                     })),
                     customerEmail: formData.email.trim().toLowerCase(),
                     customerName: formData.name.trim(),
-                    customerPhone: formData.phone.trim() || null,
+                    customerPhone: formData.phone.trim(),
                     shippingAddress: formData.address.trim(),
                     inpostPointId: selectedPoint.name,
                     inpostPointName: selectedPoint.name,
                     inpostPointAddress: `${selectedPoint.address.line1}, ${selectedPoint.address.line2}`,
+                    discountCode: appliedDiscount?.code || null,
                 },
             });
 
@@ -198,19 +244,21 @@ const Checkout: React.FC = () => {
                 throw error;
             }
 
-            // Bezpieczna walidacja adresu URL przekierowania (ochrona przed Open Redirect)
+            // Bezpieczna walidacja adresu URL przekierowania (ochrona przed Open Redirect i HTTP MitM)
             if (data?.url && typeof data.url === 'string') {
                 const parsedUrl = new URL(data.url);
+                const isTrustedProtocol = parsedUrl.protocol === 'https:';
                 const isTrustedDomain =
                     parsedUrl.hostname === 'checkout.stripe.com' ||
                     parsedUrl.hostname.endsWith('.stripe.com') ||
                     parsedUrl.origin === window.location.origin;
 
-                if (isTrustedDomain) {
-                    clearCart();
+                if (isTrustedProtocol && isTrustedDomain) {
+                    // UWAGA: Koszyka NIE czyścimy tutaj! Zostanie wyczyszczony dopiero na stronie sukcesu /order-confirmation/:orderId
+                    // Dzięki temu, jeśli użytkownik anuluje na Stripe, nie traci produktów.
                     window.location.href = data.url;
                 } else {
-                    throw new Error('Niezaufana domena bramki płatności');
+                    throw new Error('Niezaufana domena bramki płatności lub brak szyfrowania HTTPS');
                 }
             } else {
                 throw new Error('Brak adresu przekierowania do płatności');
@@ -223,8 +271,15 @@ const Checkout: React.FC = () => {
     };
 
     const subtotal = getTotalPrice();
-    const shipping = selectedPoint ? 14.99 : 0;
-    const total = subtotal + shipping;
+    const discountAmount = appliedDiscount ? Math.round((subtotal * appliedDiscount.percent) / 100) : 0;
+    const discountedSubtotal = subtotal - discountAmount;
+
+    // Poprawne wyliczenie darmowej dostawy powyżej 300 zł
+    const isFreeShipping = discountedSubtotal >= FREE_SHIPPING_THRESHOLD;
+    const shipping = selectedPoint ? (isFreeShipping ? 0 : 14.99) : 0;
+    const total = discountedSubtotal + shipping;
+
+    const amountNeededForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - discountedSubtotal);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('pl-PL', {
@@ -234,13 +289,7 @@ const Checkout: React.FC = () => {
     };
 
     return (
-        <motion.div
-            initial={ANIMATION_VARIANTS.pageInitial}
-            animate={ANIMATION_VARIANTS.pageAnimate}
-            exit={ANIMATION_VARIANTS.pageExit}
-            transition={{ duration: 0.4 }}
-            className="min-h-screen py-12"
-        >
+        <div className="min-h-screen py-12">
             <div className="container mx-auto px-4 max-w-6xl">
                 <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center tracking-tight">Finalizacja Zamówienia</h1>
 
@@ -299,7 +348,7 @@ const Checkout: React.FC = () => {
                                     </div>
 
                                     <div>
-                                        <Label htmlFor="phone">Numer telefonu (do powiadomień SMS o paczce)</Label>
+                                        <Label htmlFor="phone">Numer telefonu (wymagany do kodu SMS Paczkomatu) *</Label>
                                         <Input
                                             id="phone"
                                             name="phone"
@@ -307,6 +356,7 @@ const Checkout: React.FC = () => {
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             placeholder="+48 123 456 789"
+                                            required
                                             aria-invalid={!!errors.phone}
                                             className={errors.phone ? 'border-destructive' : ''}
                                         />
@@ -351,7 +401,7 @@ const Checkout: React.FC = () => {
                                 <CardContent className="space-y-4">
                                     <div className="flex gap-2">
                                         <Input
-                                            placeholder="Szukaj po kodzie lub ulicy..."
+                                            placeholder="Szukaj po kodzie lub ulicy (np. WAW, Floriańska)..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="flex-1"
@@ -397,7 +447,7 @@ const Checkout: React.FC = () => {
                                     </div>
 
                                     {/* Points List */}
-                                    <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                                    <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
                                         {filteredPoints.length > 0 ? (
                                             filteredPoints.map((point) => (
                                                 <button
@@ -432,11 +482,58 @@ const Checkout: React.FC = () => {
                                                 </button>
                                             ))
                                         ) : (
-                                            <p className="text-center text-xs text-muted-foreground py-4">
-                                                Nie znaleziono punktu pasującego do &quot;{searchQuery}&quot;
-                                            </p>
+                                            <div className="text-center py-4 space-y-2">
+                                                <p className="text-xs text-muted-foreground">
+                                                    Nie znaleziono punktu w liście podręcznej.
+                                                </p>
+                                                {searchQuery.trim().length >= 3 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        onClick={handleSelectCustomPoint}
+                                                    >
+                                                        Użyj kodu &quot;{searchQuery.trim().toUpperCase()}&quot; jako Paczkomat
+                                                    </Button>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Terms and Privacy Checkbox (Legal requirement) */}
+                            <Card className="glass border-dashed">
+                                <CardContent className="pt-6 space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="terms"
+                                            checked={acceptedTerms}
+                                            onChange={(e) => {
+                                                setAcceptedTerms(e.target.checked);
+                                                if (errors.terms) setErrors(prev => ({ ...prev, terms: '' }));
+                                            }}
+                                            className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                                        />
+                                        <Label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                                            Oświadczam, że zapoznałem/am się i akceptuję{' '}
+                                            <Link to="/terms" target="_blank" className="text-foreground underline hover:text-primary">
+                                                Regulamin Sklepu
+                                            </Link>{' '}
+                                            oraz{' '}
+                                            <Link to="/privacy" target="_blank" className="text-foreground underline hover:text-primary">
+                                                Politykę Prywatności
+                                            </Link>
+                                            . Potwierdzam, że zamówienie wiąże się z obowiązkiem zapłaty. *
+                                        </Label>
+                                    </div>
+                                    {errors.terms && (
+                                        <p className="text-xs text-destructive flex items-center gap-1">
+                                            <AlertCircle className="w-3.5 h-3.5" />
+                                            {errors.terms}
+                                        </p>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>
@@ -449,7 +546,7 @@ const Checkout: React.FC = () => {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {/* Items */}
-                                    <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                                    <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
                                         {items.map((item) => (
                                             <div key={item.variantId} className="flex gap-3 items-center">
                                                 {item.image && (
@@ -473,14 +570,72 @@ const Checkout: React.FC = () => {
                                         ))}
                                     </div>
 
+                                    {/* Promo Code Input */}
+                                    <div className="border-t border-border pt-4">
+                                        {appliedDiscount ? (
+                                            <div className="flex items-center justify-between p-2.5 bg-green-500/10 border border-green-500/20 rounded-xl text-xs">
+                                                <div className="flex items-center gap-2 text-green-600 font-medium">
+                                                    <Check className="w-4 h-4" />
+                                                    Aktywny kod: <strong>{appliedDiscount.code}</strong> (-{appliedDiscount.percent}%)
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAppliedDiscount(null)}
+                                                    className="text-muted-foreground hover:text-destructive underline"
+                                                >
+                                                    Usuń
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                    <Input
+                                                        placeholder="Kod rabatowy (np. SILENCE10)..."
+                                                        value={discountCodeInput}
+                                                        onChange={(e) => setDiscountCodeInput(e.target.value)}
+                                                        className="pl-9 text-xs"
+                                                    />
+                                                </div>
+                                                <Button type="button" variant="outline" size="sm" onClick={handleApplyDiscount}>
+                                                    Zastosuj
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Free shipping banner */}
+                                    {isFreeShipping ? (
+                                        <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl text-xs text-primary flex items-center gap-2">
+                                            <Sparkles className="w-4 h-4 flex-shrink-0" />
+                                            <span>Gratulacje! Twoje zamówienie kwalifikuje się na <strong>darmową dostawę</strong>.</span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-muted-foreground text-center">
+                                            Dodaj produkty za jeszcze <strong className="text-foreground">{formatPrice(amountNeededForFreeShipping)}</strong>, aby otrzymać darmową dostawę!
+                                        </div>
+                                    )}
+
                                     <div className="border-t border-border pt-4 space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Produkty</span>
                                             <span>{formatPrice(subtotal)}</span>
                                         </div>
+                                        {appliedDiscount && (
+                                            <div className="flex justify-between text-green-600">
+                                                <span>Rabat ({appliedDiscount.code})</span>
+                                                <span>-{formatPrice(discountAmount)}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Dostawa InPost</span>
-                                            <span>{selectedPoint ? formatPrice(shipping) : 'Wybierz punkt'}</span>
+                                            <span>
+                                                {selectedPoint
+                                                    ? isFreeShipping
+                                                        ? <strong className="text-green-500">GRATIS</strong>
+                                                        : formatPrice(shipping)
+                                                    : 'Wybierz punkt'}
+                                            </span>
                                         </div>
                                         <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
                                             <span>Do zapłaty</span>
@@ -514,7 +669,7 @@ const Checkout: React.FC = () => {
                     </div>
                 </form>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

@@ -1,17 +1,9 @@
-import { motion } from 'framer-motion';
 import { Truck, RotateCcw, ShieldCheck, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ANIMATION_VARIANTS } from '@/lib/constants';
 
 export default function Shipping() {
   return (
-    <motion.div
-      initial={ANIMATION_VARIANTS.pageInitial}
-      animate={ANIMATION_VARIANTS.pageAnimate}
-      exit={ANIMATION_VARIANTS.pageExit}
-      transition={{ duration: 0.4 }}
-      className="min-h-screen py-12"
-    >
+    <div className="min-h-screen py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Dostawa i zwroty</h1>
@@ -75,6 +67,6 @@ export default function Shipping() {
           </Card>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

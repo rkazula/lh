@@ -79,6 +79,51 @@ export type Database = {
                     updated_at?: string
                 }
                 Relationships: []
+            },
+            contact_messages: {
+                Row: {
+                    id: string
+                    created_at: string
+                    name: string
+                    email: string
+                    subject: string | null
+                    message: string
+                }
+                Insert: {
+                    id?: string
+                    created_at?: string
+                    name: string
+                    email: string
+                    subject?: string | null
+                    message: string
+                }
+                Update: {
+                    id?: string
+                    created_at?: string
+                    name?: string
+                    email?: string
+                    subject?: string | null
+                    message?: string
+                }
+                Relationships: []
+            },
+            newsletter_subscribers: {
+                Row: {
+                    id: string
+                    created_at: string
+                    email: string
+                }
+                Insert: {
+                    id?: string
+                    created_at?: string
+                    email: string
+                }
+                Update: {
+                    id?: string
+                    created_at?: string
+                    email?: string
+                }
+                Relationships: []
             }
         }
         Views: {
